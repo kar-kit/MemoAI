@@ -1,0 +1,20 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+fastapi = {extras = ["standard"], version = "*"}
+uvicorn = "*"
+pymongo = {extras = ["srv"], version = "*"}
+argon2-cffi = "*"
+passlib = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.13"
+
+[scripts]
+start = "uvicorn app.main:app --reload"
+db_test = "python -m app.db.client"
