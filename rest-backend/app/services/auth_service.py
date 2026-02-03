@@ -1,40 +1,49 @@
-from typing import Any, Dict, Optional
-from pymongo.database import Database
+import uuid
+from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError
 
-from app.core.security import hash_password, verify_password
+ph = PasswordHasher(
+    time_cost=2,  # iterations
+    memory_cost=102400,  # 100 MB (safe + modern)
+    parallelism=8,
+    hash_len=32,
+    salt_len=16,
+)
 
 
-def get_user_by_email(db: Database, email: str) -> Optional[Dict[str, Any]]:
-    return db["users"].find_one({"email": email.lower().strip()})
-
-
-def create_user(db: Database, name: str, email: str, password: str) -> Dict[str, Any]:
-    email_norm = email.lower().strip()
-
-    existing = get_user_by_email(db, email_norm)
-    if existing:
+def create_user(db, name: str, email: str, password: str):
+    if db.users.find_one({"email": email}):
         raise ValueError("EMAIL_IN_USE")
 
-    doc = {
-        "name": name.strip(),
-        "email": email_norm,
-        "password_hash": hash_password(password),
+    uid = str(uuid.uuid4())
+
+    user = {
+        "uid": uid,
+        "name": name,
+        "email": email,
+        "password_hash": ph.hash(password),  # ✅ Argon2 hash
     }
 
-    result = db["users"].insert_one(doc)
-    doc["_id"] = result.inserted_id
-    return doc
+    result = db.users.insert_one(user)
+    user["_id"] = result.inserted_id
+    return user
 
 
-def authenticate_user(
-    db: Database, email: str, password: str
-) -> Optional[Dict[str, Any]]:
-    email_norm = email.lower().strip()
-    user = db["users"].find_one({"email": email_norm})
+def authenticate_user(db, email: str, password: str):
+    user = db.users.find_one({"email": email})
     if not user:
         return None
 
-    if not verify_password(password, user.get("password_hash", "")):
+    try:
+        ph.verify(user["password_hash"], password)
+    except VerifyMismatchError:
         return None
+
+    # Optional: auto-upgrade hash params if needed later
+    if ph.check_needs_rehash(user["password_hash"]):
+        db.users.update_one(
+            {"_id": user["_id"]},
+            {"$set": {"password_hash": ph.hash(password)}},
+        )
 
     return user

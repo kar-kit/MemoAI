@@ -7,8 +7,12 @@ name = "pypi"
 fastapi = {extras = ["standard"], version = "*"}
 uvicorn = "*"
 pymongo = {extras = ["srv"], version = "*"}
+ollama = "*"
+pypdf = "*"
+python-pptx = "*"
+lxml = "*"
+itsdangerous = "*"
 argon2-cffi = "*"
-passlib = "*"
 
 [dev-packages]
 

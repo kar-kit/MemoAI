@@ -1,4 +1,5 @@
-from fastapi import APIRouter, HTTPException, status
+# app/routers/auth.py
+from fastapi import APIRouter, HTTPException, status, Request
 from app.db.client import db
 from app.schemas.auth import (
     RegisterRequest,
@@ -13,8 +14,8 @@ from app.services.auth_service import create_user, authenticate_user
 This Router Contains
 - Register
 - Login
-
 """
+
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
@@ -34,24 +35,35 @@ def register(payload: RegisterRequest):
 
     return RegisterResponse(
         id=str(user["_id"]),
+        uid=user["uid"],  # ✅ NEW
         name=user["name"],
         email=user["email"],
     )
 
 
-@router.post("/login", response_model=LoginResponse, status_code=status.HTTP_200_OK)
-def login(payload: LoginRequest):
+@router.post("/login", response_model=LoginResponse)
+def login(payload: LoginRequest, request: Request):
     user = authenticate_user(db, payload.email, payload.password)
 
-    # Avoid leaking whether email exists
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password",
         )
 
+    # ✅ Store minimal session data
+    request.session["uid"] = user["uid"]
+    request.session["user_id"] = str(user["_id"])
+
     return LoginResponse(
         id=str(user["_id"]),
+        uid=user["uid"],
         name=user["name"],
         email=user["email"],
     )
+
+
+@router.post("/logout")
+def logout(request: Request):
+    request.session.clear()
+    return {"ok": True}

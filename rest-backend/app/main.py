@@ -1,7 +1,14 @@
 from fastapi import FastAPI
+import os
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.sessions import SessionMiddleware
 
 from app.routers.auth import router as auth_router
+from app.db.client import test_connection as test_db_connection
+from app.services.ollama_health import test_ollama
+
+from app.routers.llm import router as llm_router
+
 
 app = FastAPI(title="MemoAI API")
 
@@ -16,7 +23,32 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=os.environ["SESSION_SECRET"],
+    same_site="lax",  # good for local + prod
+    https_only=False,  # set True in production
+)
+
 app.include_router(auth_router)
+app.include_router(llm_router)
+
+
+@app.on_event("startup")
+def startup_checks():
+    print("🚀 Starting MemoAI API...")
+
+    # 1) DB check
+    print("🔌 Checking MongoDB connection...")
+    test_db_connection()
+    print("✅ MongoDB ready 🗄️")
+
+    # 2) Ollama check
+    print("🧠 Checking Ollama server + model...")
+    test_ollama()
+    print("✅ Ollama ready ⚡️")
+
+    print("🎉 Startup checks passed — API is live ✅")
 
 
 @app.get("/")
