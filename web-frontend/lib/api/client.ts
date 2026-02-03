@@ -1,11 +1,8 @@
-/**
- * Central API client for MemoAI
- * - Wraps fetch
- * - Normalises errors
- * - Keeps components clean
- */
+// lib/api/client.ts
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000";
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ??
+  "http://localhost:8000";
 
 export class ApiError extends Error {
   status: number;
@@ -17,7 +14,7 @@ export class ApiError extends Error {
   }
 }
 
-type ApiFetchOptions = RequestInit & {
+export type ApiFetchOptions = RequestInit & {
   json?: unknown;
 };
 
@@ -29,25 +26,26 @@ export async function apiFetch<T>(
 
   const res = await fetch(`${API_BASE_URL}${path}`, {
     ...rest,
+    credentials: "include", // ✅ send session cookie
     headers: {
-      "Content-Type": "application/json",
+      ...(json ? { "Content-Type": "application/json" } : {}),
       ...(headers ?? {}),
     },
     body: json ? JSON.stringify(json) : rest.body,
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let data: any = null;
-
+  let data: unknown = null;
   try {
     data = await res.json();
   } catch {
-    // Non-JSON response (rare but safe to handle)
+    // ignore non-JSON responses
   }
 
   if (!res.ok) {
+    const maybeObj = data as { detail?: string; message?: string } | null;
+
     throw new ApiError(
-      data?.detail || data?.message || "Request failed",
+      maybeObj?.detail || maybeObj?.message || "Request failed",
       res.status,
     );
   }

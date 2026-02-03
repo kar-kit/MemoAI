@@ -36,7 +36,9 @@ export default function Dashboard() {
         </p>
 
         {/* Quick actions */}
-        <div className="gap-4 grid grid-cols-1 sm:grid-cols-2 mt-8">
+        {/* Quick actions */}
+        <div className="gap-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 mt-8">
+          {/* Create flashcards */}
           <div className="bg-white/60 hover:bg-white/70 dark:bg-zinc-950/40 dark:hover:bg-zinc-950/55 p-5 border border-zinc-200/70 hover:border-zinc-300/80 dark:border-zinc-800/80 dark:hover:border-zinc-700 rounded-2xl text-left transition">
             <h2 className="font-semibold text-zinc-900 dark:text-zinc-50 text-base">
               Create flashcards
@@ -52,6 +54,7 @@ export default function Dashboard() {
             </Link>
           </div>
 
+          {/* Study now */}
           <div className="bg-white/60 hover:bg-white/70 dark:bg-zinc-950/40 dark:hover:bg-zinc-950/55 p-5 border border-zinc-200/70 hover:border-zinc-300/80 dark:border-zinc-800/80 dark:hover:border-zinc-700 rounded-2xl text-left transition">
             <h2 className="font-semibold text-zinc-900 dark:text-zinc-50 text-base">
               Study now
@@ -64,6 +67,22 @@ export default function Dashboard() {
               className="inline-flex items-center bg-white/80 hover:bg-white dark:bg-zinc-950/40 dark:hover:bg-zinc-950/60 mt-4 px-4 py-2 border border-zinc-300/80 hover:border-zinc-400/90 dark:border-zinc-700/70 dark:hover:border-zinc-600 rounded-full focus:outline-none focus:ring-4 focus:ring-cyan-500/15 dark:focus:ring-cyan-400/15 font-medium text-zinc-900 dark:text-zinc-50 text-sm transition"
             >
               Browse decks
+            </Link>
+          </div>
+
+          {/* Chat */}
+          <div className="bg-white/60 hover:bg-white/70 dark:bg-zinc-950/40 dark:hover:bg-zinc-950/55 p-5 border border-zinc-200/70 hover:border-zinc-300/80 dark:border-zinc-800/80 dark:hover:border-zinc-700 rounded-2xl text-left transition">
+            <h2 className="font-semibold text-zinc-900 dark:text-zinc-50 text-base">
+              Chat with MemoAI
+            </h2>
+            <p className="mt-1 text-zinc-600 dark:text-zinc-400 text-sm">
+              Ask questions, explore ideas, or start a fresh conversation.
+            </p>
+            <Link
+              href="/dashboard/chat"
+              className="inline-flex items-center bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-50 dark:hover:bg-zinc-200 mt-4 px-4 py-2 rounded-full focus:outline-none focus:ring-4 focus:ring-zinc-500/20 dark:focus:ring-zinc-400/20 font-medium text-white dark:text-zinc-900 text-sm active:scale-[0.99] transition"
+            >
+              New chat
             </Link>
           </div>
         </div>

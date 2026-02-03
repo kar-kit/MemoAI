@@ -1,3 +1,5 @@
+// lib/api/auth.ts
+
 import { apiFetch } from "./client";
 
 export type RegisterPayload = {
