@@ -3,12 +3,20 @@ import os
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
-from app.routers.auth import router as auth_router
 from app.db.client import test_connection as test_db_connection
 from app.services.ollama_health import test_ollama
 
+## Routers
+from app.routers.auth import router as auth_router
 from app.routers.llm import router as llm_router
+from app.routers.decks import router as decks_router
 
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(levelname)s:%(name)s:%(message)s",
+)
 
 app = FastAPI(title="MemoAI API")
 
@@ -32,6 +40,7 @@ app.add_middleware(
 
 app.include_router(auth_router)
 app.include_router(llm_router)
+app.include_router(decks_router)
 
 
 @app.on_event("startup")

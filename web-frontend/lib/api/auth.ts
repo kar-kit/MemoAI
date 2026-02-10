@@ -1,5 +1,4 @@
 // lib/api/auth.ts
-
 import { apiFetch } from "./client";
 
 export type RegisterPayload = {
@@ -10,6 +9,7 @@ export type RegisterPayload = {
 
 export type RegisterResponse = {
   id: string;
+  uid: string; // ✅ add uid
   name: string;
   email: string;
 };
@@ -28,6 +28,7 @@ export type LoginPayload = {
 
 export type LoginResponse = {
   id: string;
+  uid: string; // ✅ add uid
   name: string;
   email: string;
 };
@@ -38,3 +39,8 @@ export async function login(payload: LoginPayload) {
     json: payload,
   });
 }
+
+// Optional (only add if your backend supports it)
+// export async function logout() {
+//   return apiFetch<{ ok: boolean }>("/auth/logout", { method: "POST" });
+// }

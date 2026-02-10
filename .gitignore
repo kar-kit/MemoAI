@@ -1,0 +1,95 @@
+# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+
+# dependencies
+mobile-frontend/node_modules/
+mobile-frontend/package-lock.json
+
+# Expo
+mobile-frontend/.expo/
+mobile-frontend/dist/
+mobile-frontend/web-build/
+mobile-frontend/expo-env.d.ts
+
+# Native
+mobile-frontend/.kotlin/
+mobile-frontend/*.orig.*
+mobile-frontend/*.jks
+mobile-frontend/*.p8
+mobile-frontend/*.p12
+mobile-frontend/*.key
+mobile-frontend/*.mobileprovision
+
+# Metro
+mobile-frontend/.metro-health-check*
+
+# debug
+mobile-frontend/npm-debug.*
+mobile-frontend/yarn-debug.*
+mobile-frontend/yarn-error.*
+
+# macOS
+mobile-frontend/.DS_Store
+mobile-frontend/*.pem
+
+# local env files
+mobile-frontend/.env*.local
+
+# typescript
+mobile-frontend/*.tsbuildinfo
+
+mobile-frontend/app-example
+
+# generated native folders
+mobile-frontend/ios
+mobile-frontend/android
+
+
+
+
+
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+web-frontend/node_modules
+web-frontend/package-lock.json
+web-frontend/.pnp
+web-frontend/.pnp.*
+web-frontend/.yarn/*
+web-frontend/!.yarn/patches
+web-frontend/!.yarn/plugins
+web-frontend/!.yarn/releases
+web-frontend/!.yarn/versions
+
+# testing
+web-frontend/coverage
+
+# next.js
+web-frontend/.next/
+web-frontend/out/
+
+# production
+web-frontend/build
+
+# misc
+web-frontend/.DS_Store
+web-frontend/*.pem
+
+# debug
+web-frontend/npm-debug.log*
+web-frontend/yarn-debug.log*
+web-frontend/yarn-error.log*
+web-frontend/.pnpm-debug.log*
+
+# env files (can opt-in for committing if needed)
+web-frontend/.env*
+
+# vercel
+web-frontend/.vercel
+
+# typescript
+web-frontend/*.tsbuildinfo
+web-frontend/next-env.d.ts
+
+
+
+rest-backend/Pipfile.lock

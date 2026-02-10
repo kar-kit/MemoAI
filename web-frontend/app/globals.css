@@ -1,27 +1,60 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
-/* 
+
+/* 1) Design tokens (light defaults) */
+@theme {
+  /* page */
+  --app-bg: oklch(0.985 0.005 260); /* ~zinc-50 */
+  --app-fg: oklch(0.21 0.01 260); /* ~zinc-900 */
+  --app-muted: oklch(0.49 0.01 260); /* ~zinc-600 */
+
+  /* surfaces */
+  --card-bg: oklch(1 0 0 / 0.7); /* white/70 */
+  --card-border: oklch(0.92 0.01 260 / 0.7);
+
+  /* accents */
+  --ring: oklch(0.74 0.14 205); /* cyan-ish */
+}
+
+/* 2) Dark-mode overrides (Tailwind v4 @variant dark) */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* nothing required here */
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@variant dark {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --app-bg: oklch(0.12 0.01 260); /* near-black */
+    --app-fg: oklch(0.985 0.005 260); /* near-white */
+    --app-muted: oklch(0.72 0.01 260); /* ~zinc-400 */
+
+    --card-bg: oklch(0.14 0.01 260 / 0.6); /* zinc-950/60 */
+    --card-border: oklch(0.3 0.01 260 / 0.8);
+
+    --ring: oklch(0.8 0.12 205);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-} */
+/* 3) Apply defaults globally (this is the “make black text turn white” bit) */
+@layer base {
+  html,
+  body {
+    background: var(--app-bg);
+    color: var(--app-fg);
+  }
+
+  /* Optional: nicer default link + selection */
+  a {
+    color: inherit;
+  }
+  ::selection {
+    background: color-mix(in oklch, var(--ring) 25%, transparent);
+  }
+}
+
+/* 4) Optional: tiny utilities to match your card styling */
+@utility app-card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 1rem; /* ~rounded-2xl */
+  backdrop-filter: blur(16px);
+}

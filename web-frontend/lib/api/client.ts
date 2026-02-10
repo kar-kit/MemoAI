@@ -1,22 +1,35 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // lib/api/client.ts
-
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ??
   "http://localhost:8000";
 
 export class ApiError extends Error {
   status: number;
+  data?: unknown;
 
-  constructor(message: string, status: number) {
+  constructor(message: string, status: number, data?: unknown) {
     super(message);
     this.name = "ApiError";
     this.status = status;
+    this.data = data;
   }
 }
 
 export type ApiFetchOptions = RequestInit & {
   json?: unknown;
 };
+
+function formatFastApiDetail(detail: unknown): string | null {
+  // FastAPI validation error often returns: { detail: [{ loc, msg, type }, ...] }
+  if (Array.isArray(detail)) {
+    const first = detail[0] as any;
+    if (first?.msg) return String(first.msg);
+    return "Validation error";
+  }
+  if (typeof detail === "string") return detail;
+  return null;
+}
 
 export async function apiFetch<T>(
   path: string,
@@ -34,20 +47,44 @@ export async function apiFetch<T>(
     body: json ? JSON.stringify(json) : rest.body,
   });
 
+  // Try JSON first, fallback to text
   let data: unknown = null;
-  try {
-    data = await res.json();
-  } catch {
-    // ignore non-JSON responses
+  let text: string | null = null;
+
+  const contentType = res.headers.get("content-type") ?? "";
+  if (contentType.includes("application/json")) {
+    try {
+      data = await res.json();
+    } catch {
+      data = null;
+    }
+  } else {
+    try {
+      text = await res.text();
+      data = text;
+    } catch {
+      data = null;
+    }
   }
 
   if (!res.ok) {
-    const maybeObj = data as { detail?: string; message?: string } | null;
+    // FastAPI can return { detail: "..." } or { detail: [...] }
+    const obj = (data && typeof data === "object" ? (data as any) : null) as {
+      detail?: unknown;
+      message?: unknown;
+    } | null;
 
-    throw new ApiError(
-      maybeObj?.detail || maybeObj?.message || "Request failed",
-      res.status,
-    );
+    const msgFromDetail = obj?.detail ? formatFastApiDetail(obj.detail) : null;
+    const msgFromMessage =
+      typeof obj?.message === "string" ? obj.message : null;
+
+    const finalMessage =
+      msgFromDetail ||
+      msgFromMessage ||
+      (typeof data === "string" ? data : null) ||
+      "Request failed";
+
+    throw new ApiError(finalMessage, res.status, data);
   }
 
   return data as T;

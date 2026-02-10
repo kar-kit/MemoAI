@@ -16,9 +16,9 @@ argon2-cffi = "*"
 
 [dev-packages]
 
-[requires]
+[requires] 
 python_version = "3.13"
 
-[scripts]
-start = "uvicorn app.main:app --reload"
+[scripts] # type: ignore
+start = "uvicorn app.main:app --reload --log-level info"
 db_test = "python -m app.db.client"
