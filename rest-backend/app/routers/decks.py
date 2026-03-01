@@ -1,8 +1,7 @@
 # app/routers/decks.py
 from __future__ import annotations
 
-from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import List
 
 from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
@@ -10,11 +9,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from app.db.client import db
 from app.dependencies.auth import require_session
 from app.schemas.cards import CardCreate, CardListResponse
-from app.schemas.decks import (
-    DeckCreateRequest,
-    DeckCreateResponse,
-    DeckListItem,
-)
+from app.schemas.decks import DeckCreateRequest, DeckCreateResponse
+from app.schemas.study import StudyNextResponse, RateCardRequest, RateCardResponse
 from app.services.deck_service import (
     bulk_insert_cards,
     create_deck,
@@ -22,7 +18,7 @@ from app.services.deck_service import (
     get_deck_with_preview,
     list_decks,
 )
-
+from app.services.study_service import get_next_card, rate_card, get_deck_scores_bulk
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/decks", tags=["decks"])
@@ -43,7 +39,6 @@ def _oid(id_str: str) -> ObjectId:
 def create_deck_route(payload: DeckCreateRequest, uid: str = Depends(require_session)):
     try:
         title = (payload.title or "Untitled deck").strip()
-
         result = create_deck(
             uid=uid,
             title=title,
@@ -51,7 +46,6 @@ def create_deck_route(payload: DeckCreateRequest, uid: str = Depends(require_ses
             source_ref=payload.source_ref,
             tags=payload.tags,
         )
-
         return {
             "deck_id": result.deck_id,
             "title": result.title,
@@ -65,20 +59,26 @@ def create_deck_route(payload: DeckCreateRequest, uid: str = Depends(require_ses
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get("", response_model=List[DeckListItem])
+@router.get("")
 def list_decks_route(
     limit: int = Query(default=50, ge=1, le=200),
     uid: str = Depends(require_session),
 ):
     try:
-        return list_decks(uid=uid, limit=limit)
+        decks = list_decks(uid=uid, limit=limit)  # List[dict]
+
+        deck_ids = [d.get("deck_id") for d in decks if d.get("deck_id")]
+        scores = get_deck_scores_bulk(uid=uid, deck_ids=deck_ids)  # type: ignore # {deck_id: 0..100}
+
+        for d in decks:
+            did = d.get("deck_id")
+            d["mastery_score"] = int(scores.get(did, 0)) if did else 0
+
+        return decks
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 
-# ✅ IMPORTANT:
-# Your Next.js /dashboard/decks/[deckId] page expects:
-# { deck: {...}, cards: [...] }
 @router.get("/{deck_id}")
 def get_deck_route(
     deck_id: str,
@@ -87,7 +87,6 @@ def get_deck_route(
     uid: str = Depends(require_session),
 ):
     if debug_cookies == 1:
-        # prints to backend console
         print("🍪 Incoming cookies:", request.cookies)
 
     deck_oid = _oid(deck_id)
@@ -102,7 +101,6 @@ def get_deck_route(
         )
     )
 
-    # Normalize output for frontend
     deck_out = {
         "deck_id": str(deck["_id"]),
         "title": deck.get("title", ""),
@@ -145,15 +143,11 @@ def get_deck_preview_route(
 
 @router.post("/{deck_id}/cards")
 def add_cards_route(
-    deck_id: str,
-    cards: List[CardCreate],
-    uid: str = Depends(require_session),
+    deck_id: str, cards: List[CardCreate], uid: str = Depends(require_session)
 ):
     try:
         inserted = bulk_insert_cards(
-            uid=uid,
-            deck_id=deck_id,
-            cards=[c.model_dump() for c in cards],
+            uid=uid, deck_id=deck_id, cards=[c.model_dump() for c in cards]
         )
         preview = get_deck_with_preview(uid=uid, deck_id=deck_id, preview_count=3)
         return {"inserted": inserted, "deck": preview}
@@ -188,7 +182,6 @@ def update_card(
     deck_oid = _oid(deck_id)
     card_oid = _oid(card_id)
 
-    # ensure deck belongs to user
     deck = db.decks.find_one({"_id": deck_oid, "uid": uid}, {"_id": 1})
     if not deck:
         raise HTTPException(status_code=404, detail="Deck not found")

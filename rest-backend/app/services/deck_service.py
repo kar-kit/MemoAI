@@ -3,18 +3,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import List, Optional, Dict, Any
+from typing import Any, Dict, List, Optional
 
 from bson import ObjectId
 from pymongo import ASCENDING, DESCENDING
 
 from app.db.client import db
-
-from bson import ObjectId
-from app.db.client import db
-
-
-# ---------- Helpers ----------
 
 
 def _oid(id_str: str) -> ObjectId:
@@ -25,9 +19,6 @@ def _oid(id_str: str) -> ObjectId:
 
 def _now() -> datetime:
     return datetime.utcnow()
-
-
-# ---------- Public API ----------
 
 
 @dataclass
@@ -42,13 +33,17 @@ class DeckCreateResult:
 
 
 def ensure_deck_indexes() -> None:
-    """
-    Call once on startup if you want (optional).
-    Keeps lookups snappy.
-    """
     db.decks.create_index([("uid", ASCENDING), ("updated_at", DESCENDING)])
     db.cards.create_index(
         [("uid", ASCENDING), ("deck_id", ASCENDING), ("created_at", ASCENDING)]
+    )
+    db.card_reviews.create_index(
+        [
+            ("uid", ASCENDING),
+            ("deck_id", ASCENDING),
+            ("card_id", ASCENDING),
+            ("rated_at", DESCENDING),
+        ]
     )
 
 
@@ -86,24 +81,13 @@ def create_deck(
 
 def touch_deck_updated_at(*, uid: str, deck_id: str) -> None:
     db.decks.update_one(
-        {"_id": _oid(deck_id), "uid": uid},
-        {"$set": {"updated_at": _now()}},
+        {"_id": _oid(deck_id), "uid": uid}, {"$set": {"updated_at": _now()}}
     )
 
 
-def bulk_insert_cards(
-    *,
-    uid: str,
-    deck_id: str,
-    cards: List[Dict[str, Any]],
-) -> int:
-    """
-    cards items expected:
-      { front: str, back: str, tags?: list[str], difficulty?: int }
-    """
+def bulk_insert_cards(*, uid: str, deck_id: str, cards: List[Dict[str, Any]]) -> int:
     deck_oid = _oid(deck_id)
 
-    # ownership check (avoid inserting into someone else's deck)
     deck = db.decks.find_one({"_id": deck_oid, "uid": uid}, {"_id": 1})
     if not deck:
         raise ValueError("Deck not found")
@@ -136,23 +120,24 @@ def bulk_insert_cards(
     return len(res.inserted_ids)
 
 
-def list_decks(uid: str, limit: int = 50):
+def list_decks(uid: str, limit: int = 50) -> List[Dict[str, Any]]:
     decks = list(
         db.decks.find({"uid": uid}, {"uid": 0}).sort("updated_at", -1).limit(limit)
     )
+    if not decks:
+        return []
 
-    deck_ids = [d["_id"] for d in decks]
+    deck_ids_oid = [d["_id"] for d in decks]
 
     counts = db.cards.aggregate(
         [
-            {"$match": {"uid": uid, "deck_id": {"$in": deck_ids}}},
+            {"$match": {"uid": uid, "deck_id": {"$in": deck_ids_oid}}},
             {"$group": {"_id": "$deck_id", "count": {"$sum": 1}}},
         ]
     )
+    count_map = {str(c["_id"]): int(c["count"]) for c in counts}
 
-    count_map = {str(c["_id"]): c["count"] for c in counts}
-
-    out = []
+    out: List[Dict[str, Any]] = []
     for d in decks:
         did = str(d["_id"])
         out.append(
@@ -161,6 +146,8 @@ def list_decks(uid: str, limit: int = 50):
                 "title": d.get("title", "Untitled deck"),
                 "description": d.get("description"),
                 "source_type": d.get("source_type", "unknown"),
+                "source_ref": d.get("source_ref"),
+                "tags": d.get("tags", []) or [],
                 "updated_at": d.get("updated_at"),
                 "created_at": d.get("created_at"),
                 "card_count": count_map.get(did, 0),
@@ -180,15 +167,10 @@ def get_deck(*, uid: str, deck_id: str) -> Dict[str, Any]:
 
 
 def get_deck_cards(
-    *,
-    uid: str,
-    deck_id: str,
-    limit: int = 200,
-    skip: int = 0,
+    *, uid: str, deck_id: str, limit: int = 200, skip: int = 0
 ) -> List[Dict[str, Any]]:
     deck_oid = _oid(deck_id)
 
-    # ownership check
     deck = db.decks.find_one({"_id": deck_oid, "uid": uid}, {"_id": 1})
     if not deck:
         raise ValueError("Deck not found")
@@ -203,34 +185,25 @@ def get_deck_cards(
         .limit(limit)
     )
 
-    out = []
-    for c in cards:
-        out.append(
-            {
-                "card_id": str(c["_id"]),
-                "deck_id": deck_id,
-                "front": c.get("front", ""),
-                "back": c.get("back", ""),
-                "tags": c.get("tags", []) or [],
-                "difficulty": c.get("difficulty", None),
-                "created_at": c.get("created_at"),
-            }
-        )
-    return out
+    return [
+        {
+            "card_id": str(c["_id"]),
+            "deck_id": deck_id,
+            "front": c.get("front", ""),
+            "back": c.get("back", ""),
+            "tags": c.get("tags", []) or [],
+            "difficulty": c.get("difficulty", None),
+            "created_at": c.get("created_at"),
+        }
+        for c in cards
+    ]
 
 
 def get_deck_with_preview(
-    *,
-    uid: str,
-    deck_id: str,
-    preview_count: int = 3,
+    *, uid: str, deck_id: str, preview_count: int = 3
 ) -> Dict[str, Any]:
     deck = get_deck(uid=uid, deck_id=deck_id)
     preview_cards = get_deck_cards(uid=uid, deck_id=deck_id, limit=preview_count)
     card_count = db.cards.count_documents({"uid": uid, "deck_id": _oid(deck_id)})
 
-    return {
-        **deck,
-        "card_count": int(card_count),
-        "preview_cards": preview_cards,
-    }
+    return {**deck, "card_count": int(card_count), "preview_cards": preview_cards}

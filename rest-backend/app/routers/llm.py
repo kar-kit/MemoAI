@@ -417,10 +417,15 @@ async def dispatch_stream_with_file(
 
     requested = intent.args.get("card_count")
     try:
-        card_count = int(requested) if requested is not None else 10
+        card_count = int(requested) if requested is not None else None
     except Exception:
-        card_count = 10
-    card_count = max(1, min(card_count, 50))
+        card_count = None
+
+    # Only clamp if user actually provided a number.
+    # Otherwise let deck_generation_service default (requested_card_count=None => defaults to 24)
+    if card_count is not None:
+        card_count = max(1, min(card_count, 50))
+
     logger.info(f"[dispatch/stream/with-file] card_count_final={card_count}")
 
     def sse_wrapper():

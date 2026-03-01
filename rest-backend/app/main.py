@@ -1,15 +1,19 @@
+# app/main.py
+
 from fastapi import FastAPI
 import os
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
-from app.db.client import test_connection as test_db_connection
+from app.db.client import ensure_indexes, test_connection as test_db_connection
 from app.services.ollama_health import test_ollama
 
 ## Routers
 from app.routers.auth import router as auth_router
 from app.routers.llm import router as llm_router
 from app.routers.decks import router as decks_router
+from app.routers.study import router as study_router
+
 
 import logging
 
@@ -41,6 +45,7 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(llm_router)
 app.include_router(decks_router)
+app.include_router(study_router)
 
 
 @app.on_event("startup")
@@ -56,6 +61,10 @@ def startup_checks():
     print("🧠 Checking Ollama server + model...")
     test_ollama()
     print("✅ Ollama ready ⚡️")
+
+    print("📚 Ensuring MongoDB indexes...")
+    ensure_indexes()
+    print("✅ Indexes ready")
 
     print("🎉 Startup checks passed — API is live ✅")
 

@@ -53,12 +53,12 @@ class DeckCreateResponse(BaseModel):
 class DeckListItem(BaseModel):
     deck_id: str
     title: str
+    description: Optional[str] = None
     source_type: Optional[str] = None
-
-    created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
-
-    card_count: int = 0
+    created_at: Optional[datetime] = None
+    card_count: int
+    mastery_score: Optional[float] = 0  # ✅ important
 
 
 class DeckDetailResponse(BaseModel):
