@@ -67,3 +67,31 @@ def login(payload: LoginRequest, request: Request):
 def logout(request: Request):
     request.session.clear()
     return {"ok": True}
+
+
+@router.get("/me", response_model=LoginResponse)
+def get_current_user(request: Request):
+    uid = request.session.get("uid")
+    user_id = request.session.get("user_id")
+
+    if not uid or not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+        )
+
+    user = db.users.find_one({"uid": uid})
+
+    if not user:
+        request.session.clear()
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid session",
+        )
+
+    return LoginResponse(
+        id=str(user["_id"]),
+        uid=user["uid"],
+        name=user["name"],
+        email=user["email"],
+    )
