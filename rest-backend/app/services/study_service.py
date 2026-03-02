@@ -251,7 +251,7 @@ def rate_card(uid: str, deck_id: str, card_id: str, rating: int):
 
     now = datetime.utcnow()
 
-    # 1) Keep review history (unchanged behaviour)
+    # 1) Keep review history (unchanged behavior)
     review_doc = {
         "uid": uid,
         "deck_id": deck_id,

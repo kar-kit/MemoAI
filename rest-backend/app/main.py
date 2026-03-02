@@ -13,6 +13,7 @@ from app.routers.auth import router as auth_router
 from app.routers.llm import router as llm_router
 from app.routers.decks import router as decks_router
 from app.routers.study import router as study_router
+from app.routers.survey import router as survey_router
 
 
 import logging
@@ -46,6 +47,7 @@ app.include_router(auth_router)
 app.include_router(llm_router)
 app.include_router(decks_router)
 app.include_router(study_router)
+app.include_router(survey_router)
 
 
 @app.on_event("startup")
