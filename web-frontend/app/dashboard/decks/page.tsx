@@ -3,7 +3,6 @@ import BackButton from "./../_components/BackButton";
 import DeckGrid from "./_components/DeckGrid";
 import Link from "next/link";
 import { cookies } from "next/headers";
-// <-- adjust path if needed
 
 export type DeckListItem = {
   deck_id: string;
@@ -51,8 +50,8 @@ export default async function FlashcardsPage() {
       <div className="absolute inset-0 bg-gradient-to-b from-black/[0.02] dark:from-black/10 via-black/[0.04] dark:via-black/30 to-black/[0.08] dark:to-black/80 pointer-events-none" />
 
       <div className="z-10 relative mx-auto px-6 py-10 max-w-6xl">
-        {/* Header row with back button */}
-        <div className="flex justify-between items-start gap-4">
+        {/* Header row */}
+        <div className="flex sm:flex-row flex-col sm:justify-between sm:items-start gap-4">
           <div className="flex flex-col gap-2">
             <div className="text-[var(--app-muted)] text-xs">
               Library / Flashcards
@@ -62,7 +61,16 @@ export default async function FlashcardsPage() {
             </h1>
           </div>
 
-          <BackButton label="Back" />
+          <div className="flex items-center gap-3">
+            <Link
+              href="/dashboard/decks/new"
+              className="inline-flex justify-center items-center bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-xl font-semibold text-white text-sm active:scale-[0.98] transition"
+            >
+              + New deck
+            </Link>
+
+            <BackButton label="Back" />
+          </div>
         </div>
 
         <div className="mt-8">
@@ -97,9 +105,19 @@ export default async function FlashcardsPage() {
             </div>
           ) : (
             <>
-              <p className="mb-6 text-[var(--app-muted)] text-sm">
-                {decks.length} deck{decks.length === 1 ? "" : "s"}
-              </p>
+              <div className="flex sm:flex-row flex-col sm:justify-between sm:items-center gap-3 mb-6">
+                <p className="text-[var(--app-muted)] text-sm">
+                  {decks.length} deck{decks.length === 1 ? "" : "s"}
+                </p>
+
+                <Link
+                  href="/dashboard/decks/new"
+                  className="inline-flex justify-center items-center bg-black/[0.04] hover:bg-black/[0.06] dark:bg-white/10 dark:hover:bg-white/15 px-4 py-2 border border-[var(--card-border)] rounded-xl font-semibold text-sm active:scale-[0.98] transition"
+                >
+                  Create manually
+                </Link>
+              </div>
+
               <DeckGrid decks={decks} />
             </>
           )}
