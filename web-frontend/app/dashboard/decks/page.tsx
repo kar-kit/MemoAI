@@ -69,7 +69,7 @@ export default async function FlashcardsPage() {
               + New deck
             </Link>
 
-            <BackButton label="Back" />
+            <BackButton label="Back" routeName="/dashboard" />
           </div>
         </div>
 

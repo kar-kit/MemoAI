@@ -1,6 +1,9 @@
+// /app/dashboard/decks/[deckId]/deckEditor.tsx
 "use client";
 
 import { useMemo, useState } from "react";
+
+import BackButton from "../../_components/BackButton";
 
 type Deck = {
   deck_id: string;
@@ -40,13 +43,13 @@ function StatusPill({
 }) {
   const tones: Record<typeof tone, string> = {
     indigo:
-      "bg-indigo-500/10 text-indigo-300 border-indigo-400/20 dark:bg-indigo-500/15",
-    zinc: "bg-white/6 text-zinc-300 border-white/10",
+      "border-indigo-500/20 bg-indigo-500/10 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300",
+    zinc: "border-zinc-300/70 bg-zinc-100/80 text-zinc-700 dark:border-white/10 dark:bg-white/5 dark:text-zinc-300",
     amber:
-      "bg-amber-500/10 text-amber-200 border-amber-400/20 dark:bg-amber-500/15",
+      "border-amber-500/20 bg-amber-500/10 text-amber-700 dark:bg-amber-500/15 dark:text-amber-200",
     green:
-      "bg-emerald-500/10 text-emerald-200 border-emerald-400/20 dark:bg-emerald-500/15",
-    red: "bg-rose-500/10 text-rose-200 border-rose-400/20 dark:bg-rose-500/15",
+      "border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-200",
+    red: "border-rose-500/20 bg-rose-500/10 text-rose-700 dark:bg-rose-500/15 dark:text-rose-200",
   };
 
   return (
@@ -87,7 +90,6 @@ export default function DeckEditor({
     })),
   );
 
-  // UI filters (client-only)
   const [query, setQuery] = useState("");
   const [sortMode, setSortMode] = useState<"newest" | "oldest">("newest");
 
@@ -105,8 +107,6 @@ export default function DeckEditor({
           return hay.includes(q);
         });
 
-    // We don't have created_at on cards here, so "newest" just means UI order
-    // (we insert new ones at the top). "oldest" = reverse.
     return sortMode === "newest" ? filtered : [...filtered].reverse();
   }, [cards, query, sortMode]);
 
@@ -256,7 +256,6 @@ export default function DeckEditor({
   async function saveAll() {
     const dirty = cards.filter((c) => c._dirty && !c._saving && !c._deleting);
     for (const c of dirty) {
-      // eslint-disable-next-line no-await-in-loop
       await saveCard(c.card_id);
     }
   }
@@ -310,24 +309,28 @@ export default function DeckEditor({
   }
 
   return (
-    <div className="relative bg-[#070A12] min-h-screen overflow-hidden text-white">
-      {/* Indigo branded background */}
-      <div className="absolute inset-0 bg-[radial-gradient(1100px_circle_at_30%_-200px,rgba(99,102,241,0.30),transparent_60%),radial-gradient(900px_circle_at_80%_10%,rgba(79,70,229,0.22),transparent_55%),radial-gradient(700px_circle_at_15%_60%,rgba(56,189,248,0.10),transparent_60%)] pointer-events-none" />
-      <div className="absolute inset-0 opacity-[0.10] pointer-events-none [background-image:radial-gradient(rgba(255,255,255,0.25)_1px,transparent_1px)] [background-size:18px_18px]" />
-      <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/30 to-black/80 pointer-events-none" />
+    <div className="relative bg-[var(--app-bg)] min-h-screen overflow-hidden text-[var(--app-fg)]">
+      {/* Theme-aware backdrop */}
+      <div className="absolute inset-0 bg-[radial-gradient(1100px_circle_at_30%_-200px,rgba(99,102,241,0.18),transparent_60%),radial-gradient(900px_circle_at_80%_10%,rgba(79,70,229,0.12),transparent_55%),radial-gradient(700px_circle_at_15%_60%,rgba(56,189,248,0.08),transparent_60%)] dark:bg-[radial-gradient(1100px_circle_at_30%_-200px,rgba(99,102,241,0.30),transparent_60%),radial-gradient(900px_circle_at_80%_10%,rgba(79,70,229,0.22),transparent_55%),radial-gradient(700px_circle_at_15%_60%,rgba(56,189,248,0.10),transparent_60%)] pointer-events-none" />
+      <div className="absolute inset-0 opacity-[0.10] pointer-events-none [background-image:radial-gradient(rgba(0,0,0,0.18)_1px,transparent_1px)] dark:[background-image:radial-gradient(rgba(255,255,255,0.25)_1px,transparent_1px)] [background-size:18px_18px]" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/[0.02] dark:from-black/10 via-black/[0.04] dark:via-black/30 to-black/[0.08] dark:to-black/80 pointer-events-none" />
 
       <div className="z-10 relative mx-auto px-6 py-10 max-w-6xl">
         {/* Top header */}
-        <div className="flex justify-between items-start gap-6">
+        <div className="flex sm:flex-row flex-col sm:justify-between sm:items-start gap-4">
           <div className="min-w-0">
-            <div className="flex items-center gap-2 text-white/60 text-xs">
-              <span className="bg-white/5 px-2 py-1 border border-white/10 rounded-md">
+            <div className="mb-4">
+              <BackButton label="Back" routeName="/dashboard" />
+            </div>
+
+            <div className="flex items-center gap-2 text-zinc-500 dark:text-white/60 text-xs">
+              <span className="bg-zinc-100/80 dark:bg-white/5 px-2 py-1 border border-zinc-300/70 dark:border-white/10 rounded-md">
                 Deck
               </span>
               <span className="truncate">/{deck.deck_id}</span>
             </div>
 
-            <h1 className="mt-3 font-semibold text-3xl truncate tracking-tight">
+            <h1 className="mt-3 font-semibold text-zinc-900 dark:text-white text-3xl truncate tracking-tight">
               {deck.title}
             </h1>
 
@@ -344,7 +347,7 @@ export default function DeckEditor({
           <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={addCard}
-              className="bg-white/6 hover:bg-white/10 px-4 py-2 border border-white/12 rounded-xl font-medium text-white/90 text-sm active:scale-[0.98] transition"
+              className="bg-zinc-100/80 hover:bg-zinc-200/80 dark:bg-white/6 dark:hover:bg-white/10 px-4 py-2 border border-zinc-300/70 dark:border-white/12 rounded-xl font-medium text-zinc-800 dark:text-white/90 text-sm active:scale-[0.98] transition"
             >
               + Add card
             </button>
@@ -355,8 +358,8 @@ export default function DeckEditor({
               className={cx(
                 "rounded-xl px-4 py-2 text-sm font-semibold transition active:scale-[0.98]",
                 dirtyCount === 0
-                  ? "cursor-not-allowed bg-white/10 text-white/40"
-                  : "bg-indigo-500 text-white hover:bg-indigo-400",
+                  ? "cursor-not-allowed bg-zinc-200/70 text-zinc-400 dark:bg-white/10 dark:text-white/40"
+                  : "bg-indigo-600 text-white hover:bg-indigo-500",
               )}
             >
               Save all
@@ -365,18 +368,18 @@ export default function DeckEditor({
         </div>
 
         {/* Sticky toolbar */}
-        <div className="top-0 z-20 sticky bg-black/30 backdrop-blur-xl mt-8 p-3 border border-white/10 rounded-2xl">
+        <div className="top-0 z-20 sticky bg-white/70 dark:bg-black/30 backdrop-blur-xl mt-8 p-3 border border-zinc-300/60 dark:border-white/10 rounded-2xl">
           <div className="flex md:flex-row flex-col md:justify-between md:items-center gap-3">
             <div className="flex flex-1 items-center gap-2">
               <div className="relative w-full md:max-w-md">
-                <div className="top-2.5 left-3 absolute text-white/40 pointer-events-none">
+                <div className="top-2.5 left-3 absolute text-zinc-400 dark:text-white/40 pointer-events-none">
                   ⌕
                 </div>
                 <input
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Search cards…"
-                  className="bg-white/5 py-2 pr-3 pl-9 border border-white/10 focus:border-indigo-400/30 rounded-xl outline-none ring-indigo-400/0 focus:ring-4 focus:ring-indigo-500/15 w-full text-white placeholder:text-white/35 text-sm transition"
+                  className="bg-white/80 dark:bg-white/5 py-2 pr-3 pl-9 border border-zinc-300/70 focus:border-indigo-400/50 dark:border-white/10 rounded-xl outline-none focus:ring-4 focus:ring-indigo-500/15 w-full text-zinc-900 dark:placeholder:text-white/35 dark:text-white placeholder:text-zinc-400 text-sm transition"
                 />
               </div>
 
@@ -386,7 +389,7 @@ export default function DeckEditor({
                   onChange={(e) =>
                     setSortMode(e.target.value as "newest" | "oldest")
                   }
-                  className="bg-white/5 px-3 py-2 border border-white/10 focus:border-indigo-400/30 rounded-xl outline-none focus:ring-4 focus:ring-indigo-500/15 text-white/90 text-sm transition"
+                  className="bg-white/80 dark:bg-white/5 px-3 py-2 border border-zinc-300/70 focus:border-indigo-400/50 dark:border-white/10 rounded-xl outline-none focus:ring-4 focus:ring-indigo-500/15 text-zinc-800 dark:text-white/90 text-sm transition"
                 >
                   <option value="newest">Newest first</option>
                   <option value="oldest">Oldest first</option>
@@ -395,15 +398,15 @@ export default function DeckEditor({
             </div>
 
             <div className="flex items-center gap-2">
-              <div className="text-white/50 text-xs">
+              <div className="text-zinc-500 dark:text-white/50 text-xs">
                 Showing{" "}
-                <span className="font-medium text-white/80">
+                <span className="font-medium text-zinc-700 dark:text-white/80">
                   {visibleCards.length}
                 </span>
               </div>
               <button
                 onClick={() => setQuery("")}
-                className="bg-white/5 hover:bg-white/10 px-3 py-2 border border-white/10 rounded-xl font-medium text-white/70 text-xs transition"
+                className="bg-zinc-100/80 hover:bg-zinc-200/80 dark:bg-white/5 dark:hover:bg-white/10 px-3 py-2 border border-zinc-300/70 dark:border-white/10 rounded-xl font-medium text-zinc-700 dark:text-white/70 text-xs transition"
               >
                 Clear
               </button>
@@ -429,14 +432,14 @@ export default function DeckEditor({
                 key={c.card_id}
                 className={cx(
                   "group rounded-2xl border p-4 backdrop-blur-xl transition md:p-5",
-                  "border-white/10 bg-white/[0.04] hover:bg-white/[0.06]",
-                  c._dirty && "border-indigo-400/25",
+                  "border-zinc-300/60 bg-white/65 hover:bg-white/80 dark:border-white/10 dark:bg-white/[0.04] dark:hover:bg-white/[0.06]",
+                  c._dirty && "border-indigo-400/30",
                   c._deleting && "opacity-60",
                 )}
               >
                 <div className="flex justify-between items-center gap-3">
-                  <div className="flex items-center gap-2 text-white/60 text-xs">
-                    <span className="bg-white/5 px-2 py-1 border border-white/10 rounded-md">
+                  <div className="flex items-center gap-2 text-zinc-500 dark:text-white/60 text-xs">
+                    <span className="bg-zinc-100/80 dark:bg-white/5 px-2 py-1 border border-zinc-300/70 dark:border-white/10 rounded-md">
                       Card {idx + 1}
                     </span>
                     <StatusPill tone={status.tone}>{status.label}</StatusPill>
@@ -449,8 +452,8 @@ export default function DeckEditor({
                       className={cx(
                         "rounded-xl px-3 py-2 text-xs font-semibold transition",
                         c._saving || c._deleting
-                          ? "cursor-not-allowed bg-white/10 text-white/35"
-                          : "bg-rose-500/12 text-rose-200 hover:bg-rose-500/18",
+                          ? "cursor-not-allowed bg-zinc-200/70 text-zinc-400 dark:bg-white/10 dark:text-white/35"
+                          : "bg-rose-500/10 text-rose-700 hover:bg-rose-500/15 dark:bg-rose-500/12 dark:text-rose-200 dark:hover:bg-rose-500/18",
                       )}
                     >
                       Delete
@@ -462,8 +465,8 @@ export default function DeckEditor({
                       className={cx(
                         "rounded-xl px-3 py-2 text-xs font-semibold transition",
                         !c._dirty || c._saving || c._deleting
-                          ? "cursor-not-allowed bg-white/10 text-white/35"
-                          : "bg-white/8 text-white/80 hover:bg-white/12",
+                          ? "cursor-not-allowed bg-zinc-200/70 text-zinc-400 dark:bg-white/10 dark:text-white/35"
+                          : "bg-zinc-100/80 text-zinc-700 hover:bg-zinc-200/80 dark:bg-white/8 dark:text-white/80 dark:hover:bg-white/12",
                       )}
                     >
                       Cancel
@@ -475,8 +478,8 @@ export default function DeckEditor({
                       className={cx(
                         "rounded-xl px-3 py-2 text-xs font-semibold transition",
                         !c._dirty || c._saving || c._deleting
-                          ? "cursor-not-allowed bg-white/10 text-white/35"
-                          : "bg-indigo-500 text-white hover:bg-indigo-400",
+                          ? "cursor-not-allowed bg-zinc-200/70 text-zinc-400 dark:bg-white/10 dark:text-white/35"
+                          : "bg-indigo-600 text-white hover:bg-indigo-500",
                       )}
                     >
                       Save
@@ -486,7 +489,7 @@ export default function DeckEditor({
 
                 <div className="gap-4 grid grid-cols-1 md:grid-cols-2 mt-4">
                   <div>
-                    <label className="font-semibold text-[11px] text-white/60 tracking-wide">
+                    <label className="font-semibold text-[11px] text-zinc-500 dark:text-white/60 tracking-wide">
                       FRONT
                     </label>
                     <textarea
@@ -495,13 +498,13 @@ export default function DeckEditor({
                         updateCard(c.card_id, { front: e.target.value })
                       }
                       placeholder="Type the question…"
-                      className="bg-black/30 mt-2 px-3 py-3 border border-white/10 focus:border-indigo-400/30 rounded-2xl outline-none focus:ring-4 focus:ring-indigo-500/15 w-full text-white text-sm transition resize-none"
+                      className="bg-white/85 dark:bg-black/30 mt-2 px-3 py-3 border border-zinc-300/70 focus:border-indigo-400/50 dark:border-white/10 rounded-2xl outline-none focus:ring-4 focus:ring-indigo-500/15 w-full text-zinc-900 dark:placeholder:text-white/35 dark:text-white placeholder:text-zinc-400 text-sm transition resize-none"
                       rows={4}
                     />
                   </div>
 
                   <div>
-                    <label className="font-semibold text-[11px] text-white/60 tracking-wide">
+                    <label className="font-semibold text-[11px] text-zinc-500 dark:text-white/60 tracking-wide">
                       BACK
                     </label>
                     <textarea
@@ -510,14 +513,14 @@ export default function DeckEditor({
                         updateCard(c.card_id, { back: e.target.value })
                       }
                       placeholder="Type the answer…"
-                      className="bg-black/30 mt-2 px-3 py-3 border border-white/10 focus:border-indigo-400/30 rounded-2xl outline-none focus:ring-4 focus:ring-indigo-500/15 w-full text-white text-sm transition resize-none"
+                      className="bg-white/85 dark:bg-black/30 mt-2 px-3 py-3 border border-zinc-300/70 focus:border-indigo-400/50 dark:border-white/10 rounded-2xl outline-none focus:ring-4 focus:ring-indigo-500/15 w-full text-zinc-900 dark:placeholder:text-white/35 dark:text-white placeholder:text-zinc-400 text-sm transition resize-none"
                       rows={4}
                     />
                   </div>
                 </div>
 
                 {c._error && (
-                  <div className="bg-rose-500/10 mt-3 px-3 py-2 border border-rose-400/20 rounded-xl text-rose-200 text-xs">
+                  <div className="bg-rose-500/10 mt-3 px-3 py-2 border border-rose-400/20 rounded-xl text-rose-700 dark:text-rose-200 text-xs">
                     {c._error}
                   </div>
                 )}
@@ -526,8 +529,8 @@ export default function DeckEditor({
           })}
         </div>
 
-        <div className="mt-10 text-white/45 text-xs text-center">
-          MemoAI · Indigo UI · Edits stay local until you press save.
+        <div className="mt-10 text-zinc-500 dark:text-white/45 text-xs text-center">
+          MemoAI · Edits stay local until you press save.
         </div>
       </div>
     </div>

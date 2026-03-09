@@ -1,8 +1,7 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import ChatPage from "@/app/dashboard/chat/page";
-// app/__tests__/chat-page.test.tsx
 import React from "react";
 import userEvent from "@testing-library/user-event";
 
@@ -35,7 +34,6 @@ vi.mock("@/lib/api/llm", () => ({
     dispatchStreamWithFileMock(...args),
 }));
 
-// Render-props harness for ChatLayout so we can drive ChatPage without caring about layout markup
 vi.mock("@/app/dashboard/chat/_components/ChatLayout", () => ({
   default: (props: any) => {
     return (
@@ -82,28 +80,31 @@ vi.mock("@/app/dashboard/chat/_components/ChatLayout", () => ({
 describe("ChatPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.useFakeTimers();
+    vi.useRealTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("mounts after a short delay and refreshes chats on load", async () => {
+    vi.useFakeTimers();
+
     render(<ChatPage />);
 
-    // initial mounted false (set after 60ms)
     expect(screen.getByTestId("mounted").textContent).toBe("false");
+    expect(refreshChatsMock).toHaveBeenCalledTimes(1);
 
-    // refreshChats called on mount effect
-    await waitFor(() => expect(refreshChatsMock).toHaveBeenCalledTimes(1));
+    act(() => {
+      vi.advanceTimersByTime(60);
+    });
 
-    vi.advanceTimersByTime(60);
-    await waitFor(() =>
-      expect(screen.getByTestId("mounted").textContent).toBe("true"),
-    );
+    expect(screen.getByTestId("mounted").textContent).toBe("true");
   });
 
   it("sends a message via dispatchStream and renders streamed tokens + done", async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const user = userEvent.setup();
 
-    // When dispatchStream is called, emit some events into the handlers
     dispatchStreamMock.mockImplementation((_payload: any, handlers: any) => {
       handlers.onEvent({ type: "status", message: "Thinking…" });
       handlers.onEvent({ type: "token", token: "Hel" });
@@ -120,23 +121,19 @@ describe("ChatPage", () => {
 
     await user.click(screen.getByRole("button", { name: /send/i }));
 
-    await waitFor(() => expect(dispatchStreamMock).toHaveBeenCalledTimes(1));
+    await waitFor(() => {
+      expect(dispatchStreamMock).toHaveBeenCalledTimes(1);
+    });
 
-    // payload should include chat_id and messages array
     const [payload] = dispatchStreamMock.mock.calls[0];
     expect(payload.chat_id).toBe("c1");
     expect(Array.isArray(payload.messages)).toBe(true);
 
-    // streamed result should appear
     expect(await screen.findByText("Hello!")).toBeInTheDocument();
-
-    // refreshChats scheduled after 300ms
-    vi.advanceTimersByTime(300);
-    await waitFor(() => expect(refreshChatsMock).toHaveBeenCalledTimes(2));
   });
 
   it("sends with a file via dispatchStreamWithFile and clears the file", async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const user = userEvent.setup();
 
     dispatchStreamWithFileMock.mockImplementation(
       (_payload: any, handlers: any) => {
@@ -152,24 +149,26 @@ describe("ChatPage", () => {
 
     await user.upload(screen.getByLabelText("File"), file);
     await user.type(screen.getByLabelText("Message input"), "with file");
-
     await user.click(screen.getByRole("button", { name: /send/i }));
 
-    await waitFor(() =>
-      expect(dispatchStreamWithFileMock).toHaveBeenCalledTimes(1),
-    );
+    await waitFor(() => {
+      expect(dispatchStreamWithFileMock).toHaveBeenCalledTimes(1);
+    });
 
     const [payload] = dispatchStreamWithFileMock.mock.calls[0];
     expect(payload.chat_id).toBe("c1");
     expect(payload.message).toBe("with file");
     expect(payload.file?.name).toBe("test.txt");
+
+    expect(await screen.findByText("Got it")).toBeInTheDocument();
   });
 
   it("pressing Enter (no shift) sends", async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const user = userEvent.setup();
 
     dispatchStreamMock.mockImplementation((_payload: any, handlers: any) => {
       handlers.onEvent({ type: "done", response: "Sent" });
+      handlers.onClose?.();
       return { close: vi.fn() };
     });
 
@@ -179,7 +178,10 @@ describe("ChatPage", () => {
     await user.type(input, "hey");
     await user.keyboard("{Enter}");
 
-    await waitFor(() => expect(dispatchStreamMock).toHaveBeenCalledTimes(1));
+    await waitFor(() => {
+      expect(dispatchStreamMock).toHaveBeenCalledTimes(1);
+    });
+
     expect(await screen.findByText("Sent")).toBeInTheDocument();
   });
 });

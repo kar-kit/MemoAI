@@ -2,13 +2,27 @@
 
 import { useRouter } from "next/navigation";
 
-export default function BackButton({ label = "Back" }: { label?: string }) {
+type BackButtonProps = {
+  label?: string;
+  routeName?: string;
+};
+
+export default function BackButton({
+  label = "Back",
+  routeName,
+}: BackButtonProps) {
   const router = useRouter();
 
   return (
     <button
       type="button"
-      onClick={() => router.back()}
+      onClick={() => {
+        if (routeName) {
+          router.push(routeName);
+        } else {
+          router.back();
+        }
+      }}
       className={[
         "inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold",
         "border border-[var(--card-border)] bg-[var(--card-bg)] text-[var(--app-fg)]",
