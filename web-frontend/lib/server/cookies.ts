@@ -1,18 +1,13 @@
 // lib/server/cookies.ts
 // Server-only utility — do NOT import in client components.
-import { cookies } from "next/headers";
+import { headers } from "next/headers";
 
 /**
- * Builds a `Cookie` header string from the current request's cookies so that
- * server-side fetch calls to the FastAPI backend forward the session cookie.
- *
- * Using getAll() is more reliable than toString() across Next.js versions
- * because it always produces a properly URL-encoded `name=value` pair format.
+ * Returns the raw `Cookie` header exactly as the browser sent it to Next.js,
+ * so server-side fetches to the FastAPI backend forward the session token
+ * without any re-encoding that could corrupt the Starlette session value.
  */
 export async function forwardCookieHeader(): Promise<string> {
-  const store = await cookies();
-  return store
-    .getAll()
-    .map((c) => `${c.name}=${encodeURIComponent(c.value)}`)
-    .join("; ");
+  const h = await headers();
+  return h.get("cookie") ?? "";
 }
