@@ -25,22 +25,30 @@ logging.basicConfig(
 
 app = FastAPI(title="MemoAI API")
 
+# Build CORS origins: always include localhost, add FRONTEND_URL if set
+_allowed_origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+if _frontend_url := os.getenv("FRONTEND_URL", "").rstrip("/"):
+    _allowed_origins.append(_frontend_url)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-    ],
+    allow_origins=_allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# https_only=True adds the Secure flag — must be True when served over HTTPS
+_https_only = os.getenv("HTTPS_ONLY", "false").lower() == "true"
+
 app.add_middleware(
     SessionMiddleware,
     secret_key=os.environ["SESSION_SECRET"],
-    same_site="lax",  # good for local + prod
-    https_only=False,  # set True in production
+    same_site="lax",
+    https_only=_https_only,
 )
 
 app.include_router(auth_router)

@@ -1,1 +1,26 @@
+# Not deployed to Vercel
 /rest-backend
+/mobile-frontend
+/analytics-dashboard
+
+# Dependencies (Vercel installs these)
+web-frontend/node_modules
+web-frontend/package-lock.json
+
+# Next.js build cache (Vercel builds this)
+web-frontend/.next
+
+# Test / coverage artifacts
+web-frontend/coverage
+web-frontend/app/__tests__
+
+# Misc
+web-frontend/.DS_Store
+web-frontend/.pnpm-debug.log*
+web-frontend/npm-debug.log*
+web-frontend/yarn-debug.log*
+web-frontend/yarn-error.log*
+
+# TypeScript generated files
+web-frontend/next-env.d.ts
+web-frontend/*.tsbuildinfo

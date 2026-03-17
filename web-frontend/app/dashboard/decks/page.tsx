@@ -2,7 +2,8 @@ import BackButton from "./../_components/BackButton";
 // app/dashboard/decks/page.tsx
 import DeckGrid from "./_components/DeckGrid";
 import Link from "next/link";
-import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { forwardCookieHeader } from "@/lib/server/cookies";
 
 export type DeckListItem = {
   deck_id: string;
@@ -19,14 +20,17 @@ async function getDecks(): Promise<DeckListItem[]> {
     process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ??
     "http://localhost:8000";
 
-  const cookieStore = await cookies();
-  const cookieHeader = cookieStore.toString();
+  const cookieHeader = await forwardCookieHeader();
 
   const res = await fetch(`${API_URL}/decks?limit=200`, {
     method: "GET",
     headers: { cookie: cookieHeader },
     cache: "no-store",
   });
+
+  if (res.status === 401) {
+    redirect("/logsys/login");
+  }
 
   if (!res.ok) {
     const txt = await res.text().catch(() => "");

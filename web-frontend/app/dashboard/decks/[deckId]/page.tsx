@@ -1,6 +1,7 @@
 // /app/dashboard/decks/[deckId]/page.tsx
 import DeckEditor from "./deckEditor";
-import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { forwardCookieHeader } from "@/lib/server/cookies";
 
 type Deck = {
   deck_id: string;
@@ -20,14 +21,17 @@ async function getDeck(deckId: string) {
     process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ??
     "http://localhost:8000";
 
-  const cookieStore = await cookies();
-  const cookieHeader = cookieStore.toString();
+  const cookieHeader = await forwardCookieHeader();
 
   const res = await fetch(`${API_URL}/decks/${deckId}`, {
     method: "GET",
     headers: { cookie: cookieHeader },
     cache: "no-store",
   });
+
+  if (res.status === 401) {
+    redirect("/logsys/login");
+  }
 
   if (!res.ok) {
     throw new Error(`Failed to load deck (${res.status})`);

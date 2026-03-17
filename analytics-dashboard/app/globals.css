@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+/* ─── Print / screenshot styles ─────────────────────────────────────────────── */
+@media print {
+  @page {
+    margin: 16mm 12mm;
+    size: A4;
+  }
+
+  /* keep dark bg so charts remain legible in PDF */
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* hide interactive chrome */
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* tighten spacing for print */
+  main {
+    padding: 0 !important;
+  }
+}

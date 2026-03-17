@@ -13,8 +13,16 @@ python-pptx = "*"
 lxml = "*"
 itsdangerous = "*"
 argon2-cffi = "*"
+pytest = "*"
+pytest-cov = "*"
+httpx = "*"
+pytest-html = "*"
 
 [dev-packages]
+allure-pytest = "*"
+pytest = "*"
+pytest-cov = "*"
+pytest-html = "*"
 
 [requires] 
 python_version = "3.13"
@@ -22,3 +30,7 @@ python_version = "3.13"
 [scripts] # type: ignore
 start = "uvicorn app.main:app --reload --log-level info"
 db_test = "python -m app.db.client"
+
+report = "sh -c 'pytest -v --cov=app --cov-report=html --html=report.html --self-contained-html && open report.html && open htmlcov/index.html'"
+test= "sh -c 'rm -rf allure-results allure-report && pytest -v --alluredir=allure-results && allure serve allure-results'"
+test_allure_build = "sh -c 'rm -rf allure-results allure-report && pytest -v --alluredir=allure-results && allure generate allure-results -o allure-report --clean && allure open allure-report'"
