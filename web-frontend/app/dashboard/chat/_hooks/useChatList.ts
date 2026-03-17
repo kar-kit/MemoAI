@@ -7,7 +7,7 @@ import type {
   ChatSummary,
   ChatsListItem,
 } from "../_types/chat";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 
 import { uid } from "../_types/chat";
 
@@ -16,12 +16,7 @@ export function useChatList(setMessages: (msgs: ChatMessage[]) => void) {
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
   const [loadingChat, setLoadingChat] = useState(false);
 
-  const API_URL = useMemo(() => {
-    return (
-      process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ??
-      "http://localhost:8000"
-    );
-  }, []);
+  const API_URL = "/api/proxy";
 
   const refreshChats = useCallback(async () => {
     const res = await fetch(`${API_URL}/llm/chats`, { credentials: "include" });
@@ -39,7 +34,7 @@ export function useChatList(setMessages: (msgs: ChatMessage[]) => void) {
     if (!activeChatId && mapped.length > 0) {
       setActiveChatId(mapped[0].id);
     }
-  }, [API_URL, activeChatId]);
+  }, [activeChatId]);
 
   const startNewChat = useCallback(async () => {
     const res = await fetch(`${API_URL}/llm/chats`, {
@@ -68,7 +63,7 @@ export function useChatList(setMessages: (msgs: ChatMessage[]) => void) {
     setChats((prev) => [newChat, ...prev.filter((c) => c.id !== newChat.id)]);
 
     return newChat.id;
-  }, [API_URL]);
+  }, []);
 
   const loadChat = useCallback(
     async (chatId: string) => {
@@ -97,7 +92,7 @@ export function useChatList(setMessages: (msgs: ChatMessage[]) => void) {
         setLoadingChat(false);
       }
     },
-    [API_URL, setMessages],
+    [setMessages],
   );
 
   return {

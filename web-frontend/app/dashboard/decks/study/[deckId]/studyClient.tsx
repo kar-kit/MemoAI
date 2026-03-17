@@ -1,7 +1,7 @@
 // app/dashboard/decks/study/[deckId]/studyClient.tsx
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import Link from "next/link";
 
@@ -75,12 +75,7 @@ function selectedRingByRating(r: Rating) {
 }
 
 export default function StudyClient({ deck }: { deck: Deck }) {
-  const API_URL = useMemo(
-    () =>
-      process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ??
-      "http://localhost:8000",
-    [],
-  );
+  const API_URL = "/api/proxy";
 
   const [card, setCard] = useState<Card | null>(null);
   const [remaining, setRemaining] = useState(0);
@@ -116,7 +111,7 @@ export default function StudyClient({ deck }: { deck: Deck }) {
         if (!opts?.cancelled?.()) setLoading(false);
       }
     },
-    [API_URL, deck.deck_id],
+    [deck.deck_id],
   );
 
   const rate = useCallback(
@@ -139,7 +134,7 @@ export default function StudyClient({ deck }: { deck: Deck }) {
         setIsRating(false);
       }
     },
-    [API_URL, deck.deck_id, card, fetchNext, isRating],
+    [deck.deck_id, card, fetchNext, isRating],
   );
 
   useEffect(() => {

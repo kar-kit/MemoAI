@@ -22,9 +22,7 @@ function makeEmptyCard(): DraftCard {
 export default function NewDeckPage() {
   const router = useRouter();
 
-  const API_URL =
-    process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ??
-    "http://localhost:8000";
+  const API_URL = "/api/proxy";
 
   const [title, setTitle] = useState("");
   const [cards, setCards] = useState<DraftCard[]>([

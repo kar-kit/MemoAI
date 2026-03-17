@@ -1,8 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // lib/api/client.ts
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ??
-  "http://localhost:8000";
+//
+// All client-side fetches are routed through the Next.js proxy (/api/proxy)
+// so the session cookie (stored on the Vercel domain after login) is forwarded
+// to FastAPI by the proxy server rather than by the browser directly.
+const API_BASE_URL = "/api/proxy";
 
 export class ApiError extends Error {
   status: number;

@@ -74,9 +74,7 @@ export default function DeckEditor({
   initialDeck: Deck;
   initialCards: Card[];
 }) {
-  const API_URL =
-    process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ??
-    "http://localhost:8000";
+  const API_URL = "/api/proxy";
 
   const [deck] = useState(initialDeck);
   const [cards, setCards] = useState<EditableCard[]>(

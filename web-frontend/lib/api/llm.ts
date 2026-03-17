@@ -125,7 +125,7 @@ export function dispatchStream(
   (async () => {
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ?? "http://localhost:8000"}/llm/dispatch/stream`,
+        `/api/proxy/llm/dispatch/stream`,
         {
           method: "POST",
           credentials: "include",
@@ -226,7 +226,7 @@ export function dispatchStreamWithFile(
       form.append("file", opts.file);
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ?? "http://localhost:8000"}/llm/dispatch/stream/with-file`,
+        `/api/proxy/llm/dispatch/stream/with-file`,
         {
           method: "POST",
           credentials: "include",
