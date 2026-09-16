@@ -8,7 +8,7 @@ The whole language-model layer runs on **self-hosted Ollama**. No OpenAI key, no
 
 **Stack** — FastAPI · Python 3.13 · MongoDB · Ollama · Next.js 16 · React 19 · TypeScript · Tailwind v4 · Pytest · Vitest · Vercel
 
-> Despite the repository name, this is a three-service monorepo. The FastAPI backend is the larger half of it.
+> A three-service monorepo. The FastAPI backend is the larger half of it.
 
 ---
 
