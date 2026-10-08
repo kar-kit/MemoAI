@@ -1,0 +1,15 @@
+{
+  "note": "Hand-written cards against sm2_spaced_repetition.txt with known labels. Used to check whether the judge can catch planted defects before its scores are trusted.",
+  "source": "sm2_spaced_repetition.txt",
+  "cards": [
+    {"front": "What starting ease factor does SM-2 give a new card?", "back": "2.5", "expect": {"answerable": 1, "consistent": 1, "atomic": 1, "non_trivial": 1}},
+    {"front": "What is the minimum ease factor allowed in SM-2?", "back": "1.3", "expect": {"answerable": 1, "consistent": 1, "atomic": 1, "non_trivial": 1}},
+    {"front": "In SM-2, what interval follows the second correct repetition?", "back": "6 days", "expect": {"answerable": 1, "consistent": 1, "atomic": 1, "non_trivial": 1}},
+    {"front": "Who developed the SuperMemo algorithms?", "back": "Piotr Wozniak", "expect": {"answerable": 1, "consistent": 1, "atomic": 1, "non_trivial": 1}},
+    {"front": "What starting ease factor does SM-2 give a new card?", "back": "1.3", "expect": {"answerable": 1, "consistent": 0}, "defect": "wrong value"},
+    {"front": "In what year was SM-2 published?", "back": "1994", "expect": {"consistent": 0}, "defect": "wrong value (source says 1987)"},
+    {"front": "What learning-rate warm-up does FSRS use?", "back": "A linear warm-up over the first 500 reviews.", "expect": {"answerable": 0}, "defect": "not in source (invented)"},
+    {"front": "Describe SM-2.", "back": "SM-2 tracks repetitions, ease factor and interval, grades recall 0-5, resets on grades below 3, uses 1 and 6 day first intervals, multiplies by EF afterwards and floors EF at 1.3.", "expect": {"atomic": 0}, "defect": "bundles many facts"},
+    {"front": "SM-2 is an algorithm called SM-2. What is it called?", "back": "SM-2", "expect": {"non_trivial": 0}, "defect": "answer given away"}
+  ]
+}

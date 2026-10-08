@@ -1,0 +1,55 @@
+Databases Lecture 9: Transactions, Concurrency Control and Recovery
+
+1. What a transaction is
+A transaction is a sequence of reads and writes that the database treats as one logical unit of work. The classic example is a bank transfer: debit one account and credit another. Either both updates must happen or neither must, and other users must never see the money in neither account or in both. A transaction ends either with COMMIT, which makes its changes permanent, or with ROLLBACK (also called ABORT), which undoes them.
+
+2. The ACID properties
+Atomicity means all of a transaction's operations take effect or none do. If the system crashes halfway through, the partial work is undone on restart.
+Consistency means a transaction takes the database from one valid state to another valid state, respecting declared constraints such as primary keys, foreign keys and CHECK constraints. Consistency in ACID is partly the application's responsibility: the database can enforce declared constraints but cannot know every business rule.
+Isolation means concurrent transactions do not interfere with each other. The ideal is that the result is the same as if the transactions had run one at a time in some order.
+Durability means that once a transaction has committed, its changes survive later crashes, including power loss.
+
+3. Schedules and serialisability
+A schedule is an ordering of the operations of several concurrent transactions. A serial schedule runs transactions one after another with no interleaving. A schedule is serialisable if its effect is equivalent to some serial schedule. Two operations conflict if they belong to different transactions, touch the same data item, and at least one of them is a write. A schedule is conflict-serialisable if it can be turned into a serial schedule by swapping adjacent non-conflicting operations. We test this with a precedence graph: draw a node for each transaction and an edge from Ti to Tj whenever an operation of Ti conflicts with and comes before an operation of Tj. The schedule is conflict-serialisable if and only if the precedence graph has no cycle.
+
+4. Anomalies that isolation prevents
+A dirty read happens when a transaction reads data written by another transaction that has not yet committed. If the writer later rolls back, the reader has used a value that never officially existed.
+A non-repeatable read happens when a transaction reads the same row twice and gets different values, because another transaction updated and committed the row in between.
+A phantom read happens when a transaction runs the same query with a WHERE condition twice and gets a different set of rows, because another transaction inserted or deleted rows that match the condition.
+A lost update happens when two transactions read the same value, both modify it, and the second write overwrites the first without taking it into account.
+
+5. SQL isolation levels
+The SQL standard defines four isolation levels in terms of which anomalies they allow.
+READ UNCOMMITTED allows dirty reads, non-repeatable reads and phantoms.
+READ COMMITTED prevents dirty reads but allows non-repeatable reads and phantoms. It is the default in PostgreSQL and Oracle.
+REPEATABLE READ prevents dirty reads and non-repeatable reads. The standard still allows phantoms at this level, although some implementations prevent them. It is the default in MySQL's InnoDB engine.
+SERIALIZABLE prevents all three anomalies and guarantees a serialisable result.
+Higher isolation levels give stronger guarantees but usually reduce concurrency, because transactions wait for each other or are aborted more often.
+
+6. Lock-based concurrency control
+Most traditional systems use locks. A shared lock (S lock) is needed to read an item and can be held by many transactions at once. An exclusive lock (X lock) is needed to write an item and can only be held by one transaction, with no shared locks held by anyone else.
+Two-phase locking (2PL) requires every transaction to acquire all its locks before it releases any lock. The transaction therefore has a growing phase, in which it only acquires locks, followed by a shrinking phase, in which it only releases them. Any schedule produced under 2PL is conflict-serialisable.
+Basic 2PL can still cause cascading aborts: if T1 releases a lock early, T2 reads T1's write, and then T1 aborts, T2 must abort too. Strict two-phase locking avoids this by holding all exclusive locks until the transaction commits or aborts. Strict 2PL is what most lock-based databases implement.
+
+7. Deadlock
+Locking can cause deadlock, where two or more transactions each wait for a lock that another one holds, so none can proceed. Databases detect deadlock by building a waits-for graph, with an edge from Ti to Tj when Ti is waiting for a lock held by Tj. A cycle in the waits-for graph means deadlock. The system breaks the deadlock by choosing a victim transaction and aborting it, usually the one that has done the least work. An alternative is deadlock prevention using timestamps. In the wait-die scheme an older transaction may wait for a younger one, but a younger transaction that requests a lock held by an older one is aborted. In the wound-wait scheme an older transaction aborts (wounds) a younger one that holds a lock it needs, while a younger transaction waits for an older one.
+
+8. Multiversion concurrency control
+Multiversion concurrency control (MVCC) keeps several versions of each row instead of overwriting in place. Each transaction reads from a snapshot of the database as of a particular point in time, so readers never block writers and writers never block readers. PostgreSQL, Oracle and MySQL InnoDB all use MVCC. Snapshot isolation, a common MVCC level, prevents dirty reads, non-repeatable reads and phantoms, but it allows an anomaly called write skew. In write skew two transactions read overlapping data, each makes a decision based on what it read, and each writes to a different row, so neither sees the other's write and together they break a constraint. The standard example is two on-call doctors who both check that at least one other doctor is on call and both go off call at the same time. PostgreSQL's SERIALIZABLE level uses Serializable Snapshot Isolation (SSI), which detects dangerous patterns of read-write dependencies and aborts one of the transactions to prevent write skew.
+
+9. Optimistic concurrency control
+Optimistic concurrency control assumes conflicts are rare. A transaction runs without taking locks, recording what it read and wrote. At commit time it enters a validation phase that checks whether any concurrently committed transaction wrote something it read. If validation fails the transaction is aborted and restarted. This works well when conflicts are rare, and badly under high contention, because much work is thrown away.
+
+10. Recovery and the write-ahead log
+Durability and atomicity are implemented with a log. Under write-ahead logging (WAL), a log record describing a change must be written to stable storage before the changed data page is written to disk. At commit, the database forces the transaction's log records to disk. It does not need to force the data pages themselves, which is called a no-force policy. It may also write pages changed by uncommitted transactions to disk, which is called a steal policy. Steal and no-force give good performance but mean recovery must be able to both undo and redo changes.
+Log records contain a log sequence number (LSN), the transaction ID, the page affected, and the before image (for undo) and after image (for redo).
+Checkpoints limit how much of the log must be read during recovery. At a checkpoint the database records which transactions are active and which pages are dirty.
+
+11. ARIES
+ARIES is the recovery algorithm used, in some form, by many commercial databases. After a crash it runs three passes. The analysis pass scans the log forward from the last checkpoint to work out which transactions were active at the crash and which pages may be dirty. The redo pass repeats history: it reapplies every logged change from the earliest relevant point, including changes made by transactions that will later be undone, so the database is returned to its exact state at the moment of the crash. The undo pass then rolls back every transaction that had not committed, working backwards through the log. During undo, ARIES writes compensation log records (CLRs) so that if the system crashes again during recovery, work that has already been undone is not undone twice.
+
+12. Distributed transactions
+When one transaction updates data on several servers, each server must agree to commit or all must abort. Two-phase commit (2PC) uses a coordinator. In the prepare phase the coordinator asks every participant whether it can commit; each participant writes its changes durably and votes yes or no. In the commit phase, if every participant voted yes, the coordinator tells them all to commit; otherwise it tells them all to abort. The main weakness of 2PC is blocking: if the coordinator fails after participants have voted yes, they cannot decide on their own and must wait for the coordinator to recover.
+
+13. Summary
+Transactions give applications all-or-nothing units of work with the ACID guarantees. Isolation is implemented with locking, multiversioning or optimistic validation, each with different trade-offs between correctness and concurrency. Atomicity and durability are implemented with write-ahead logging and a recovery algorithm such as ARIES.
