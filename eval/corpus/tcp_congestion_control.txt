@@ -1,0 +1,22 @@
+Networks Lecture 7: TCP Congestion Control
+
+Why congestion control exists
+Flow control stops a sender from overwhelming the receiver. Congestion control is a different problem: it stops many senders together from overwhelming the network between them. Without it, routers drop packets, senders retransmit, and useful throughput can collapse even though links are busy. This was observed on the early Internet in 1986 and led Van Jacobson to add congestion control to TCP in 1988.
+
+The congestion window
+A TCP sender keeps a congestion window, cwnd, alongside the receiver's advertised window, rwnd. The amount of unacknowledged data in flight may not exceed the smaller of the two. The receiver controls rwnd. The sender infers cwnd from signals in the network, mainly packet loss.
+
+Slow start
+A new connection starts with a small cwnd, typically 10 segments in modern stacks following RFC 6928. During slow start cwnd grows by one segment for every acknowledgement received, which doubles cwnd roughly once per round-trip time. Growth is therefore exponential, despite the name. Slow start ends when cwnd reaches the slow start threshold, ssthresh, or when loss is detected.
+
+Congestion avoidance
+Above ssthresh the sender enters congestion avoidance. Here cwnd grows by about one segment per round-trip time, which is linear growth. This is the additive increase part of AIMD, additive increase multiplicative decrease.
+
+Reacting to loss
+TCP treats loss as a sign of congestion. If the sender receives three duplicate acknowledgements it assumes a single segment was lost. It performs fast retransmit, resending that segment without waiting for the retransmission timer, and in TCP Reno it then sets ssthresh to half of cwnd and continues from there using fast recovery. If instead the retransmission timer expires, the sender assumes heavier congestion, sets ssthresh to half of the data in flight and resets cwnd to one segment, returning to slow start.
+
+Fairness
+AIMD causes competing flows with the same round-trip time to converge towards an equal share of a bottleneck link. Flows with shorter round-trip times grow faster and tend to receive a larger share.
+
+Beyond Reno
+CUBIC, the default in Linux since kernel 2.6.19, grows cwnd as a cubic function of the time since the last loss, which makes better use of long fat networks. BBR, developed at Google, does not treat loss as the main signal. It estimates the bottleneck bandwidth and the minimum round-trip time and paces sending to match them.

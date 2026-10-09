@@ -1,0 +1,45 @@
+[Slide 1]
+Biology 101 - Photosynthesis
+
+[Slide 2]
+Overview
+Photosynthesis converts light energy into chemical energy stored in glucose.
+Overall equation: 6CO2 + 6H2O + light -> C6H12O6 + 6O2
+Takes place in chloroplasts, mainly in leaf mesophyll cells
+
+[Slide 3]
+Chloroplast structure
+Outer and inner membrane
+Thylakoids: flattened membrane sacs, stacked into grana
+Stroma: fluid surrounding the thylakoids
+Chlorophyll a and b sit in the thylakoid membrane and absorb mostly red and blue light; green light is reflected, which is why leaves look green
+
+[Slide 4]
+Stage 1 - Light-dependent reactions
+Location: thylakoid membrane
+Photosystem II absorbs light and splits water (photolysis), releasing O2, protons and electrons
+Electrons pass along the electron transport chain to Photosystem I
+The proton gradient drives ATP synthase to make ATP (photophosphorylation)
+Photosystem I re-energises electrons, which reduce NADP+ to NADPH
+Outputs: ATP, NADPH, O2
+
+[Slide 5]
+Stage 2 - Calvin cycle (light-independent reactions)
+Location: stroma
+Carbon fixation: the enzyme RuBisCO attaches CO2 to ribulose bisphosphate (RuBP)
+The product splits into two molecules of glycerate 3-phosphate (GP)
+Reduction: ATP and NADPH convert GP into triose phosphate (TP)
+Regeneration: most TP is used to regenerate RuBP, using more ATP
+Some TP leaves the cycle to build glucose and other organic molecules
+
+[Slide 6]
+Limiting factors
+Light intensity, CO2 concentration and temperature
+The rate is set by whichever factor is in shortest supply
+High temperatures denature enzymes such as RuBisCO and reduce the rate
+
+[Slide 7]
+Key facts to remember
+The oxygen released comes from water, not from CO2
+RuBisCO is thought to be the most abundant protein on Earth
+The Calvin cycle does not use light directly but depends on ATP and NADPH from the light-dependent stage

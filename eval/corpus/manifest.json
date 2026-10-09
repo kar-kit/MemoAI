@@ -1,0 +1,10 @@
+{
+  "licence": "CC BY 4.0. All five texts were written for this evaluation (October 2026) as lecture-style notes; no third-party text is reproduced.",
+  "items": [
+    {"id": "sm2", "file": "sm2_spaced_repetition.txt", "style": "prose notes", "requested_card_count": 10},
+    {"id": "tcp", "file": "tcp_congestion_control.txt", "style": "prose notes", "requested_card_count": 12},
+    {"id": "gd", "file": "gradient_descent.txt", "style": "prose notes", "requested_card_count": 12},
+    {"id": "photo", "file": "photosynthesis.txt", "style": "pptx-style slide extraction", "requested_card_count": 10},
+    {"id": "db", "file": "database_transactions.txt", "style": "long prose notes (2 chunks)", "requested_card_count": 24}
+  ]
+}

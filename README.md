@@ -63,6 +63,37 @@ npm run test:run
 
 Requires MongoDB and a running Ollama instance. Configuration is via environment variables (`SESSION_SECRET`, `FRONTEND_URL`, `HTTPS_ONLY`, `NEXT_PUBLIC_API_URL`).
 
+## Evaluation
+
+[`eval/`](eval) runs the real deck-generation code (`deck_generation_service.py`, imported unchanged, with Mongo writes stubbed) against a fixed corpus of 5 self-written lecture texts (CC BY 4.0). Each model is forced in turn and measured per deck: latency, tokens in/out, how often the model's JSON parses strictly, needs regex salvage or fails, whether the requested card count is hit, and duplicates. Quality is scored by two LLM judges plus a blind human-labelling sheet. The judges are themselves checked against planted-defect cards and are **not** treated as ground truth. Full method, commands and error analysis are in [`eval/RESULTS.md`](eval/RESULTS.md).
+
+Run on 8 Oct 2026, RTX 3060 12 GB, Ollama 0.34.0, 10 decks per row (p95 = slowest of 10):
+
+| Model | Deck p50 | Deck p95 | Output tokens / deck | JSON failed (chunk lost) | Exact card count |
+|---|---|---|---|---|---|
+| **`gemma3:latest`** (production) | **6.8 s** | **16.7 s** | 744 | 0% (but 100% needed regex salvage) | 10/10 |
+| `phi3:3.8b` | 11.5 s | 35.8 s | 1,359 | 21% | 6/10 |
+| `qwen3:8b` | 32.9 s | 113.2 s | 2,665 | 0% | 10/10 |
+
+A simulated size-based router (short inputs to phi3, long ones to gemma3) was slower than gemma3 alone and lost cards to parse failures. On this corpus, routing would not pay for itself.
+
+**What doesn't work yet**
+
+- **There is no multi-model routing in the backend.** Every call goes to one model (`OLLAMA_CHAT_MODEL`), and `tool_call()` is unused. The router numbers above are an offline simulation.
+- **The production model makes confident factual errors.** gemma3 defined "no-force" as the steal policy on both runs, and qwen3 was wrong on the same card. The LLM judges caught 3 of the 8 chances to flag these four wrong cards.
+- **Structured output depends on a regex.** gemma3 fences every reply in Markdown, so strict JSON parsing would fail every time. When parsing fails, the chunk is dropped silently and the user gets fewer cards with no warning.
+- **Deduplication is exact-match only**, so near-identical questions ("What is write-ahead logging (WAL)?" / "What is write-ahead logging?") reach the deck.
+- **qwen3 thinks by default.** `llm_service.chat` never sets `think=False`, so 78% of qwen3's output (by characters) is reasoning text the app throws away.
+- **The eval is small:** 5 clean texts, 2 repeats, no real PDF extraction noise, and human labels not yet collected. The latency and parse-failure gaps are large enough to trust; the quality differences between models are not.
+
+```bash
+cd eval && uv venv .venv && uv pip install --python .venv/bin/python ollama pydantic pymongo python-dotenv pytest
+.venv/bin/python -m pytest tests                      # offline unit tests + dry run, no Ollama needed
+.venv/bin/python run_eval.py --host http://<ollama>:11434 --models gemma3:latest,qwen3:8b --repeats 2 --judge-model qwen3:8b
+```
+
+---
+
 ## API surface
 
 26 endpoints across five routers — `auth` (register/login/logout/me), `decks` (CRUD plus per-card patch/delete and preview), `study` (next card, rate, score), `llm` (chat, streaming chat, chat-with-file, dispatch, streaming dispatch, dispatch-with-file, chat history), and `survey` (research response capture) — 4, 8, 3, 10 and 1 respectively.

@@ -1,0 +1,22 @@
+Machine Learning Week 3: Gradient Descent
+
+Objective
+Training a model means choosing parameters theta that minimise a loss function L(theta) measured on the training data. For most models there is no closed-form solution, so we minimise L iteratively.
+
+The update rule
+Gradient descent repeatedly moves the parameters a small step in the direction of the negative gradient: theta <- theta - eta * grad L(theta). The gradient points in the direction of steepest increase, so stepping against it reduces the loss locally. The step size eta is called the learning rate.
+
+Choosing the learning rate
+If the learning rate is too small, training converges very slowly. If it is too large, updates overshoot the minimum and the loss can oscillate or diverge. Learning rate schedules reduce eta over time, for example step decay or cosine decay. A short warm-up period with a small learning rate is common when training large networks.
+
+Batch, stochastic and mini-batch
+Batch gradient descent computes the gradient over the whole training set before every update. Stochastic gradient descent (SGD) estimates it from a single example, which is cheap but noisy. Mini-batch gradient descent uses a small batch, such as 32 or 256 examples, and is the standard choice on GPUs because it balances noise against hardware efficiency. The noise in SGD can help the optimiser escape shallow local minima and saddle points.
+
+Convexity
+For a convex loss such as linear regression with squared error, any local minimum is a global minimum, and gradient descent with a suitable learning rate converges to it. Neural network losses are non-convex, so gradient descent finds a local minimum or a flat region, and the result depends on initialisation.
+
+Momentum and adaptive methods
+Momentum keeps a running average of past gradients and moves along it, which dampens oscillation across narrow valleys and speeds progress along them. Adam combines momentum with a per-parameter step size scaled by a running average of squared gradients. Its default hyperparameters are beta1 = 0.9, beta2 = 0.999 and epsilon = 1e-8.
+
+Feature scaling
+When input features have very different scales, the loss surface becomes elongated and gradient descent zig-zags. Standardising features to zero mean and unit variance makes the surface more round and speeds up convergence.
